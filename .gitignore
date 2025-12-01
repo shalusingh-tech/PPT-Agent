@@ -40,8 +40,9 @@ presentation_venv/
 .env.*.local
 key.txt
 
-# Config with API keys (uncomment if you don't want to track config)
-# config.yaml
+# Config with API keys
+config.yaml
+unified_llm.py
 
 # Logs
 *.log

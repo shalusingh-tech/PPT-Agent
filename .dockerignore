@@ -1,0 +1,58 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+presentation_venv/
+.venv/
+
+# Environment variables and secrets
+.env
+config.yaml
+key.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+ppt_creation.log
+
+# Generated files (will be created at runtime)
+slides/
+user_files/
+user_images/
+files/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+docs/
+
+# Test files
+*.ipynb
+test_*.py
+trial.py
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Playwright cache (will be installed in container)
+playwright-report/
+test-results/

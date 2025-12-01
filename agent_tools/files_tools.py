@@ -10,6 +10,10 @@ import sys
 sys.path.append("..")
 from config_loader import get_llm
 
+# Ensure directories exist
+os.makedirs("user_files", exist_ok=True)
+os.makedirs("user_images", exist_ok=True)
+
 
 # Lazy initialization (singleton pattern)
 _summarizer = None

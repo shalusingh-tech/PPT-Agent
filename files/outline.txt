@@ -1,62 +1,72 @@
-Slide 1: Cover Slide  
-- Title: Open-Weight LLM Landscape and Architecture Comparison  
-- Subtitle: Exploring Key Models, Architectures, and Trends  
-- Presenter/Author: [Your Name]  
-- Date: [Current Date]  
-Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co (The Big LLM Architecture Comparison chart)  
-
-Slide 2: Table of Contents  
-- 1. Open-Weight LLMs Overview  
-- 2. Why They Matter  
-- 3. Basic Transformer Architecture  
-- 4. Main Open Models  
-- 5. Dense vs. MoE  
-- 6. Positional Embeddings  
-- 7. Attention Improvements  
-- 8. Context Length & Performance  
-- 9. Future Trends  
-- 10. Thank You  
-Visual/Images: None  
-
-Slide 3: Open-Weight LLMs Overview  
-- Definition: Large language models with publicly shared code, weights, training data, ablation studies (e.g., DeepSeek V3 at 671B params, Qwen3, Gemma 3, Kimi K2, GPT-OSS)  
-Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co  
-
-Slide 4: Why Open-Weight LLMs Matter  
-- Enables research transparency  
-- Supports ablation studies (e.g., OLMo 2)  
-- Accelerates AI architecture innovation  
-Visual/Images: https://sebastianraschka.com/images/blog/2025/llm-research-papers-the-2025-list-january-to-june/hero.jpeg (Exploring 8 Open-Weight LLM Architectures)  
-
-Slide 5: Basic Transformer Architecture  
-- Core: Stacked blocks with self-attention, feedforward (MLP), normalization  
-- Evolution: From GPT-2 to modern gpt-oss  
-Visual/Images: https://velog.velcdn.com/images/eujinjung/post/6fdd4861-880d-4bf7-9d74-a5b04429c0e6/image.png (GPT-2 to gpt-oss evolution)  
-
-Slide 6: Main Open Models  
-- 2025 leaders: DeepSeek V3 (671B params), Qwen3, Gemma 3, Kimi K2, GPT-OSS  
-- Baselines: LLaMA, Mistral, Mixtral  
-Visual/Images: https://sebastianraschka.com/images/blog/2025/llm-research-papers-the-2025-list-january-to-june/hero.jpeg  
-
-Slide 7: Dense vs. MoE  
-- Dense: Full parameter activation  
-- MoE (Mixture of Experts): Sparse activation; few big experts + always-on expert  
-- 2025 resurgence for efficiency (e.g., mimics DeepSeek V3)  
-Visual/Images: https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https://substack-post-media.s3.amazonaws.com/public/images/47c015d7-1345-48b4-8170-fd9bb636b92f_2102x1078.png  
-
-Slide 8: Positional Embeddings & Attention  
-- Positional: Implicit in context innovations  
-- Attention: GQA (shares K/V), MLA (compresses K/V cache), Sliding Windows (long-context efficiency)  
-Visual/Images: https://futureskillsacademy.com/wp-content/uploads/2024/05/Top_LLMs-1024x910.png  
-
-Slide 9: Context Length & Performance  
-- Enables long texts (books, docs, code)  
-- MLA/Sliding Windows reduce memory  
-- MoE boosts scale/efficiency (e.g., DeepSeek V3 at 671B)  
-Visual/Images: https://futureskillsacademy.com/wp-content/uploads/2024/05/Top_LLMs-1024x910.png  
-
-Slide 10: Future Trends & Thank You  
-- Trends: MoE dominance, sparse computation, efficiency/long-context focus  
-- Evolution: GPT lineage to DeepSeek V3/gpt-oss  
-- Thank You! Questions?  
+Slide 1: Cover Slide
+- Open-Weight LLM Landscape and Architecture Comparison
 Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co
+
+Slide 2: Table of Contents
+- What are Open-Weight LLMs?
+- Why They Are Important
+- Basic Transformer Architecture
+- Main Open Models (LLaMA, Mistral, Mixtral)
+- Dense vs. MoE
+- Positional Embeddings
+- Attention Improvements
+- Context Length & Performance
+- Future Trends
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/11.png
+
+Slide 3: What are Open-Weight LLMs?
+- Modern LLMs from transformer blocks
+- Components: self-attention, MLP (feedforward), normalization, learned weights
+- Share code, training data, ablation studies (e.g., OLMo 2 for transparency)
+Visual/Images: https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https://substack-post-media.s3.amazonaws.com/public/images/53956ae8-9cd8-474e-8c10-ef6bddb88164_1600x938.png
+
+Slide 4: Why They Are Important
+- Transparency enables research community access (code, data, ablations)
+- Innovations reduce memory for long contexts
+- Enable tasks: book summarization, legal docs, code analysis
+- Democratize AI beyond closed models
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/11.png
+
+Slide 5: Basic Transformer Architecture
+- Layered: self-attention, feedforward (MLP) layers, normalization
+- Core for context handling in modern LLMs
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/18.png
+
+Slide 6: Main Open Models (LLaMA, Mistral, Mixtral)
+- Leaders: LLaMA series, Mistral, Mixtral
+- Compared on architecture, efficiency, performance
+Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co
+
+Slide 7: Dense vs. MoE
+- Dense: activates all parameters
+- MoE (Mixture-of-Experts): activates parameter subsets (e.g., Mixtral)
+- MoE cuts compute, maintains performance
+Visual/Images: https://www.maginative.com/content/images/2023/12/GBEQckjX0AAoGq-.jpg
+
+Slide 8: Positional Embeddings
+- Encode sequence order in transformers
+- Key for context/attention processing
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/18.png
+
+Slide 9: Attention Improvements
+- GQA (Grouped Query Attention)
+- Sliding Windows
+- Variants: causal/self-attention
+- Reduce memory for long contexts
+Visual/Images: https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https://substack-post-media.s3.amazonaws.com/public/images/53956ae8-9cd8-474e-8c10-ef6bddb88164_1600x938.png
+
+Slide 10: Context Length & Performance
+- Sliding windows enable huge contexts (books, legal docs, code)
+- Memory/performance trade-offs
+- Boosted by attention innovations
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/11.png
+
+Slide 11: Future Trends
+- More efficiency, transparency (e.g., OLMo 2)
+- Advanced: MoE dominance, long-context handling
+- Open-weight research directions
+Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co
+
+Slide 12: Thank You
+- Questions?
+Visual/Images: 

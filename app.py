@@ -225,7 +225,7 @@ async def run_generation_with_progress(task: str, files: list, tracker: Progress
     logging.info("Slide generation complete")
     
     # Step 5: Convert to PDF
-    tracker.update("pdf", "Converting slides to 4K PDF (270 DPI)")
+    tracker.update("pdf", "Converting slides to PDF")
     pdf_path = await convert_slides_to_pdf()
     logging.info(f"PDF conversion complete: {pdf_path}")
     
@@ -797,7 +797,6 @@ def main():
                         size_mb = os.path.getsize(pdf_path) / (1024 * 1024)
                         col2.metric("PDF Size", f"{size_mb:.1f} MB")
                     
-                    col3.metric("Resolution", "4K")
                     
                     st.success("🎉 Your presentation is ready! Check the Preview and Download tabs.")
                 

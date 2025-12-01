@@ -23,28 +23,55 @@ PAGE_HEIGHT = 2160
 
 
 def find_chromium_path():
-    """Find Playwright's bundled Chromium executable or Chrome"""
+    """Find Playwright's bundled Chromium executable or Chrome (cross-platform)"""
     
-    # Try Playwright's ms-playwright cache in user folder
+    # Get user home directory (works on all platforms)
     home = os.path.expanduser("~")
-    playwright_cache = os.path.join(home, "AppData", "Local", "ms-playwright")
+    
+    # Platform-specific Playwright cache locations
+    if sys.platform == 'win32':
+        playwright_cache = os.path.join(home, "AppData", "Local", "ms-playwright")
+    elif sys.platform == 'darwin':  # macOS
+        playwright_cache = os.path.join(home, "Library", "Caches", "ms-playwright")
+    else:  # Linux
+        playwright_cache = os.path.join(home, ".cache", "ms-playwright")
     
     if os.path.exists(playwright_cache):
         print(f"Looking in Playwright cache: {playwright_cache}")
         # Look for chromium folders
         chromium_dirs = glob.glob(os.path.join(playwright_cache, "chromium-*"))
         for chromium_dir in sorted(chromium_dirs, reverse=True):  # Get latest version
-            chrome_path = os.path.join(chromium_dir, "chrome-win", "chrome.exe")
+            # Platform-specific browser executable
+            if sys.platform == 'win32':
+                chrome_path = os.path.join(chromium_dir, "chrome-win", "chrome.exe")
+            elif sys.platform == 'darwin':
+                chrome_path = os.path.join(chromium_dir, "chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium")
+            else:  # Linux
+                chrome_path = os.path.join(chromium_dir, "chrome-linux", "chrome")
+            
             if os.path.exists(chrome_path):
                 return chrome_path
     
-    # Try common Chrome paths on Windows
-    chrome_paths = [
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
-        os.path.expandvars(r"%PROGRAMFILES%\Google\Chrome\Application\chrome.exe"),
-    ]
+    # Fallback: try system Chrome/Chromium
+    if sys.platform == 'win32':
+        chrome_paths = [
+            os.path.join(os.environ.get('PROGRAMFILES', ''), 'Google', 'Chrome', 'Application', 'chrome.exe'),
+            os.path.join(os.environ.get('PROGRAMFILES(X86)', ''), 'Google', 'Chrome', 'Application', 'chrome.exe'),
+            os.path.join(home, 'AppData', 'Local', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+        ]
+    elif sys.platform == 'darwin':
+        chrome_paths = [
+            '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+            '/Applications/Chromium.app/Contents/MacOS/Chromium',
+        ]
+    else:  # Linux
+        chrome_paths = [
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium-browser',
+            '/usr/bin/chromium',
+            '/snap/bin/chromium',
+        ]
     
     for path in chrome_paths:
         if os.path.exists(path):
