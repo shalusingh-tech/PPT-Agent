@@ -156,7 +156,7 @@ class ProgressTracker:
                     st.markdown(f"✅ {step['label']}")
                 elif step["id"] == self.current_step:
                     # In progress - spinner
-                    st.markdown(f"⏳ {step['label']}...")
+                    st.markdown(f"🔄 {step['label']}...")
                 else:
                     # Pending - empty box
                     st.markdown(f"⬜ {step['label']}")
@@ -192,7 +192,7 @@ async def run_generation_with_progress(task: str, files: list, tracker: Progress
         web_researcher = get_web_researcher()
         response = await web_researcher.ainvoke(
             {"messages": "Research on this topic: " + task},
-            config={"recursion_limit": 15}  # Limit to prevent infinite loops
+            config={"recursion_limit": 30}  # Increased limit for thorough research
         )
         state["web_content"] = response["messages"][-1].content
         logging.info("Web research complete")
@@ -751,7 +751,7 @@ def main():
             st.session_state.stop_generation = False
             
             st.divider()
-            st.markdown("### 🔄 Generation Progress")
+            st.markdown("### 🔄 Progress")
             
             # Progress UI elements
             steps_container = st.empty()
@@ -805,9 +805,7 @@ def main():
                 # Reset generating state on error
                 st.session_state.is_generating = False
                 
-                progress_bar.progress(0)
-                status_container.error(f"❌ Error: {str(e)}")
-                st.error(f"An error occurred: {str(e)}")
+                st.error(f"❌ An error occurred: {str(e)}")
                 logging.error(f"Generation error: {e}")
                 import traceback
                 with st.expander("🔍 Error Details"):

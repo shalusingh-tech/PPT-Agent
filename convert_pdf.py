@@ -48,7 +48,7 @@ def convert_slides_to_pdf():
             # Create page with 12x scale for 16K (1280*12=15360, 720*12=8640)
             page = browser.new_page(device_scale_factor=12)
             page.set_viewport_size({"width": 1280, "height": 720})
-            page.goto(file_url, wait_until="domcontentloaded", timeout=15000)
+            page.goto(file_url, wait_until="load", timeout=30000)
             
             # Inject CSS to ensure exact dimensions
             page.add_style_tag(content="""
@@ -64,8 +64,35 @@ def convert_slides_to_pdf():
                 }
             """)
             
-            # Wait for content to load
-            page.wait_for_timeout(3000)
+            # Wait for all images to load
+            print("  Waiting for images to load...")
+            page.evaluate("""
+                () => {
+                    return Promise.all(
+                        Array.from(document.images)
+                            .filter(img => !img.complete)
+                            .map(img => new Promise((resolve, reject) => {
+                                img.onload = resolve;
+                                img.onerror = resolve;  // Don't fail on broken images
+                                // Timeout after 10 seconds per image
+                                setTimeout(resolve, 10000);
+                            }))
+                    );
+                }
+            """)
+            
+            # Additional wait for rendering
+            page.wait_for_timeout(7000)
+            
+            # Log image status
+            img_status = page.evaluate("""
+                () => {
+                    const imgs = Array.from(document.images);
+                    const loaded = imgs.filter(img => img.complete && img.naturalWidth > 0).length;
+                    return { total: imgs.length, loaded: loaded };
+                }
+            """)
+            print(f"  Images loaded: {img_status['loaded']}/{img_status['total']}")
             
             # Take screenshot
             screenshot_path = os.path.join(slides_dir, f"slide_{num}.png")

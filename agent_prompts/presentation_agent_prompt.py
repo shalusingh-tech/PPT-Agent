@@ -119,6 +119,7 @@ Use this layout to make slides that requires charts, images or diagrams.
 
 CRITICAL IMAGE SIZING RULES:
 - NEVER use `object-fit: cover` on images - it crops them. Use `object-fit: contain` instead.
+- ALWAYS set `aspect-ratio: auto` or do not set aspect-ratio at all - let images maintain their natural aspect ratio.
 - Calculate image height dynamically based on number of images:
   * 1 image: height can be up to 450px
   * 2 images: height should be ~200px each with gap
@@ -134,6 +135,7 @@ CRITICAL IMAGE SIZING RULES:
       border-radius: 8px;
   }}
   ```
+- IMPORTANT: Never distort images. Always maintain the original aspect ratio of images.
 </Image_slide_template_layout>
 
 You can use the defined templates and use them in a way to make hybrid templates but it should not break the conistency and the rules defined.

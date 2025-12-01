@@ -242,7 +242,7 @@ def _convert_slides_to_pdf_sync():
                 final_pdf_path,
                 save_all=True,
                 append_images=images[1:] if len(images) > 1 else [],
-                resolution=295.0
+                resolution=300.0
             )
         
         # Close all images
@@ -273,10 +273,11 @@ async def convert_slides_to_pdf():
     """
     Convert slides to PDF by running a separate Python process.
     This completely avoids Windows asyncio subprocess issues.
+    Uses Html2Image for high-resolution output.
     """
     import subprocess
     
-    logging.info("Starting PDF conversion (using subprocess)")
+    logging.info("Starting PDF conversion (using Html2Image subprocess)")
     
     try:
         # Get the path to the Python interpreter in the venv
@@ -285,8 +286,8 @@ async def convert_slides_to_pdf():
         else:
             python_exe = sys.executable
         
-        # Path to the conversion script
-        script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'convert_pdf.py')
+        # Path to the conversion script (using Html2Image version)
+        script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'convert_pdf_html2image.py')
         
         logging.info(f"Running PDF conversion script: {script_path}")
         

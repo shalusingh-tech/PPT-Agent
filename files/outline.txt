@@ -1,63 +1,62 @@
-Slide 1: Cover Slide
-- Qwen 3: Architecture, Capabilities, and Engineering Innovations
-- Subtitle: Insights from the Qwen3 Technical Report (2025)
-- Presented by: [Your Name/Team]
-- Date: [Current Date]
+Slide 1: Cover Slide  
+- Title: Open-Weight LLM Landscape and Architecture Comparison  
+- Subtitle: Exploring Key Models, Architectures, and Trends  
+- Presenter/Author: [Your Name]  
+- Date: [Current Date]  
+Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co (The Big LLM Architecture Comparison chart)  
 
-Slide 2: Table of Contents
-1. Qwen Family Background & Training Goals
-2. Model Architecture Overview
-3. Key Innovations: Positional Embeddings & Attention
-4. Optimizations: Quantization & Inference
-5. Training Dataset Scale & Diversity
-6. Evaluation Benchmarks
-7. Long-Context Performance
-8. Summary of Improvements
+Slide 2: Table of Contents  
+- 1. Open-Weight LLMs Overview  
+- 2. Why They Matter  
+- 3. Basic Transformer Architecture  
+- 4. Main Open Models  
+- 5. Dense vs. MoE  
+- 6. Positional Embeddings  
+- 7. Attention Improvements  
+- 8. Context Length & Performance  
+- 9. Future Trends  
+- 10. Thank You  
+Visual/Images: None  
 
-Slide 3: Qwen Family Background & Training Goals
-- Evolution from Qwen2, Qwen2.5 to Qwen3
-- Goals: Enhanced reasoning, multilingual support, long-context, math, coding, instruction-following
-- Introduction of thinking/non-thinking modes
-- Competitive edge via data optimization (e.g., DoReMi)
+Slide 3: Open-Weight LLMs Overview  
+- Definition: Large language models with publicly shared code, weights, training data, ablation studies (e.g., DeepSeek V3 at 671B params, Qwen3, Gemma 3, Kimi K2, GPT-OSS)  
+Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co  
 
-Slide 4: Model Architecture Overview
-- Layer structure and attention mechanisms
-- Tokenizer advancements for multilingual efficiency
-- Building on prior Qwen series with scaled improvements
-- Support for diverse tasks (language, reasoning, code)
+Slide 4: Why Open-Weight LLMs Matter  
+- Enables research transparency  
+- Supports ablation studies (e.g., OLMo 2)  
+- Accelerates AI architecture innovation  
+Visual/Images: https://sebastianraschka.com/images/blog/2025/llm-research-papers-the-2025-list-january-to-june/hero.jpeg (Exploring 8 Open-Weight LLM Architectures)  
 
-Slide 5: Key Innovations: Positional Embeddings & Attention
-- Modifications to RoPE/ALiBi for long-context scaling
-- Attention optimizations for efficiency
-- Thinking mode enhancements for complex reasoning
-- Design choices for state-of-the-art performance
+Slide 5: Basic Transformer Architecture  
+- Core: Stacked blocks with self-attention, feedforward (MLP), normalization  
+- Evolution: From GPT-2 to modern gpt-oss  
+Visual/Images: https://velog.velcdn.com/images/eujinjung/post/6fdd4861-880d-4bf7-9d74-a5b04429c0e6/image.png (GPT-2 to gpt-oss evolution)  
 
-Slide 6: Optimizations: Quantization & Inference
-- Quantization strategies for deployment
-- Inference speedups and edge feasibility
-- Practical engineering for real-world use
-- Alignment with Alibaba Cloud resources
+Slide 6: Main Open Models  
+- 2025 leaders: DeepSeek V3 (671B params), Qwen3, Gemma 3, Kimi K2, GPT-OSS  
+- Baselines: LLaMA, Mistral, Mixtral  
+Visual/Images: https://sebastianraschka.com/images/blog/2025/llm-research-papers-the-2025-list-january-to-june/hero.jpeg  
 
-Slide 7: Training Dataset Scale & Diversity
-- Massive scale with high diversity (multilingual focus)
-- Optimization techniques like DoReMi (2023)
-- Contamination-free data for reliable benchmarks
-- Preparation for math, coding, logic puzzles (e.g., AutoLogi)
+Slide 7: Dense vs. MoE  
+- Dense: Full parameter activation  
+- MoE (Mixture of Experts): Sparse activation; few big experts + always-on expert  
+- 2025 resurgence for efficiency (e.g., mimics DeepSeek V3)  
+Visual/Images: https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https://substack-post-media.s3.amazonaws.com/public/images/47c015d7-1345-48b4-8170-fd9bb636b92f_2102x1078.png  
 
-Slide 8: Evaluation Benchmarks
-- Comprehensive results (Tables 15-20): Reasoning, math, coding, language
-- Multilingual scores (Tables 24-25: Spanish, French)
-- Leaderboards: LiveBench (2024), Berkeley Function Calling, WritingBench (2025)
-- Competitive with xAI Grok 3 beta (2025)
+Slide 8: Positional Embeddings & Attention  
+- Positional: Implicit in context innovations  
+- Attention: GQA (shares K/V), MLA (compresses K/V cache), Sliding Windows (long-context efficiency)  
+Visual/Images: https://futureskillsacademy.com/wp-content/uploads/2024/05/Top_LLMs-1024x910.png  
 
-Slide 9: Long-Context Performance & Summary of Improvements
-- Superior long-context handling and scaling
-- Key gains over Qwen2/Qwen2.5: Benchmarks, modes, optimizations
-- Safety/alignment via instruction-following
-- Resources: Hugging Face, ModelScope, GitHub/QwenLM
+Slide 9: Context Length & Performance  
+- Enables long texts (books, docs, code)  
+- MLA/Sliding Windows reduce memory  
+- MoE boosts scale/efficiency (e.g., DeepSeek V3 at 671B)  
+Visual/Images: https://futureskillsacademy.com/wp-content/uploads/2024/05/Top_LLMs-1024x910.png  
 
-Slide 10: Thank You
-- Questions?
-- References: Qwen3 Technical Report (2025-05-15)
-- Contact: [Your Info]
-- Visual/Images: Qwen logo or benchmark chart placeholder
+Slide 10: Future Trends & Thank You  
+- Trends: MoE dominance, sparse computation, efficiency/long-context focus  
+- Evolution: GPT lineage to DeepSeek V3/gpt-oss  
+- Thank You! Questions?  
+Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co
