@@ -9,7 +9,7 @@ An intelligent presentation generator that uses AI agents to create professional
 
 ## 🎬 Demo
 
-https://github.com/shalusingh-tech/PPT-Agent/raw/main/assets/Demo.mp4
+[▶️ Click to Watch Demo Video](https://github.com/shalusingh-tech/PPT-Agent/raw/main/assets/Demo.mp4)
 
 > *Watch the demo to see PPT Agent in action - from topic input to PDF generation!*
 
