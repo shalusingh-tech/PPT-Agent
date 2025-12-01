@@ -1,0 +1,63 @@
+Slide 1: Cover Slide
+- Qwen 3: Architecture, Capabilities, and Engineering Innovations
+- Subtitle: Insights from the Qwen3 Technical Report (2025)
+- Presented by: [Your Name/Team]
+- Date: [Current Date]
+
+Slide 2: Table of Contents
+1. Qwen Family Background & Training Goals
+2. Model Architecture Overview
+3. Key Innovations: Positional Embeddings & Attention
+4. Optimizations: Quantization & Inference
+5. Training Dataset Scale & Diversity
+6. Evaluation Benchmarks
+7. Long-Context Performance
+8. Summary of Improvements
+
+Slide 3: Qwen Family Background & Training Goals
+- Evolution from Qwen2, Qwen2.5 to Qwen3
+- Goals: Enhanced reasoning, multilingual support, long-context, math, coding, instruction-following
+- Introduction of thinking/non-thinking modes
+- Competitive edge via data optimization (e.g., DoReMi)
+
+Slide 4: Model Architecture Overview
+- Layer structure and attention mechanisms
+- Tokenizer advancements for multilingual efficiency
+- Building on prior Qwen series with scaled improvements
+- Support for diverse tasks (language, reasoning, code)
+
+Slide 5: Key Innovations: Positional Embeddings & Attention
+- Modifications to RoPE/ALiBi for long-context scaling
+- Attention optimizations for efficiency
+- Thinking mode enhancements for complex reasoning
+- Design choices for state-of-the-art performance
+
+Slide 6: Optimizations: Quantization & Inference
+- Quantization strategies for deployment
+- Inference speedups and edge feasibility
+- Practical engineering for real-world use
+- Alignment with Alibaba Cloud resources
+
+Slide 7: Training Dataset Scale & Diversity
+- Massive scale with high diversity (multilingual focus)
+- Optimization techniques like DoReMi (2023)
+- Contamination-free data for reliable benchmarks
+- Preparation for math, coding, logic puzzles (e.g., AutoLogi)
+
+Slide 8: Evaluation Benchmarks
+- Comprehensive results (Tables 15-20): Reasoning, math, coding, language
+- Multilingual scores (Tables 24-25: Spanish, French)
+- Leaderboards: LiveBench (2024), Berkeley Function Calling, WritingBench (2025)
+- Competitive with xAI Grok 3 beta (2025)
+
+Slide 9: Long-Context Performance & Summary of Improvements
+- Superior long-context handling and scaling
+- Key gains over Qwen2/Qwen2.5: Benchmarks, modes, optimizations
+- Safety/alignment via instruction-following
+- Resources: Hugging Face, ModelScope, GitHub/QwenLM
+
+Slide 10: Thank You
+- Questions?
+- References: Qwen3 Technical Report (2025-05-15)
+- Contact: [Your Info]
+- Visual/Images: Qwen logo or benchmark chart placeholder

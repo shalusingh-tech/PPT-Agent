@@ -1,0 +1,1265 @@
+from bs4 import BeautifulSoup
+import re
+
+def make_editable_html(input_html):
+    """
+    Transform regular HTML into interactive editable HTML with only preview panel and save as image feature.
+    
+    Args:
+        input_html (str): The input HTML code to transform
+        
+    Returns:
+        str: The transformed HTML with interactive editing features
+    """
+    
+    # Create a BeautifulSoup object to parse the input HTML
+    soup = BeautifulSoup(input_html, 'html.parser')
+    
+    # Create the complete HTML structure with all necessary CSS and JavaScript
+    output_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive HTML Editor</title>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Include html2canvas for saving as image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }}
+
+        .container {{
+            display: flex;
+            height: 100vh;
+        }}
+
+        /* Preview Panel - Full Width */
+        .preview-panel {{
+            width: 100%;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .preview-header {{
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+
+        .preview-header h2 {{
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+        }}
+
+        .btn {{
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }}
+
+        .btn-advanced {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }}
+
+        .btn-advanced:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }}
+
+        .btn-done {{
+            background: #48bb78;
+            color: white;
+            padding: 10px 20px;
+            display: none;
+        }}
+
+        .btn-done:hover {{
+            background: #38a169;
+        }}
+
+        .btn-undo {{
+            background: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            justify-content: center;
+        }}
+
+        .btn-undo:hover {{
+            background: #5a6268;
+        }}
+
+        .btn-undo:disabled {{
+            background: #3e3e42;
+            color: #6a6a6a;
+            cursor: not-allowed;
+        }}
+
+        .btn-save {{
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }}
+
+        .btn-save:hover {{
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }}
+
+        .mode-indicator {{
+            padding: 6px 12px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }}
+
+        .mode-indicator.active {{
+            background: #c3dafe;
+            color: #2c5282;
+            animation: pulse 2s infinite;
+        }}
+
+        @keyframes pulse {{
+            0%, 100% {{ opacity: 1; }}
+            50% {{ opacity: 0.7; }}
+        }}
+
+        .preview-content {{
+            flex: 1;
+            background: white;
+            overflow: auto;
+            position: relative;
+        }}
+
+        #preview {{
+            min-height: 100%;
+            padding: 40px;
+        }}
+
+        /* Edit Mode Styles */
+        .edit-mode * {{
+            position: relative;
+            cursor: move !important;
+            padding: 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }}
+
+        .edit-mode *:hover {{
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.4);
+            background: rgba(102, 126, 234, 0.02);
+        }}
+
+        .dragging {{
+            opacity: 0.7;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.6) !important;
+            z-index: 1000;
+        }}
+
+        .edit-mode [contenteditable="true"]:focus {{
+            outline: 2px solid #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            cursor: text !important;
+        }}
+
+        /* Edit indicators */
+        .edit-indicator {{
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }}
+
+        .edit-mode:hover .edit-indicator {{
+            opacity: 1;
+        }}
+
+        .edit-indicator:hover {{
+            background: #5a67d8;
+            transform: scale(1.1);
+        }}
+
+        /* Chart container styles */
+        .chart-container {{
+            position: relative;
+            margin: 20px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }}
+
+        .edit-mode .chart-container:hover {{
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.4), 0 2px 8px rgba(0,0,0,0.1);
+        }}
+
+        /* Context Menu */
+        .context-menu {{
+            position: fixed;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 8px 0;
+            z-index: 10000;
+            display: none;
+            min-width: 180px;
+        }}
+
+        .context-menu-item {{
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }}
+
+        .context-menu-item:hover {{
+            background: #f0f0f0;
+        }}
+
+        .context-menu-item.delete {{
+            color: #e53e3e;
+        }}
+
+        .context-menu-divider {{
+            height: 1px;
+            background: #e0e0e0;
+            margin: 5px 0;
+        }}
+
+        /* Attribute Editor Modal */
+        .modal {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }}
+
+        .modal.active {{
+            display: flex;
+        }}
+
+        .modal-content {{
+            background: white;
+            border-radius: 10px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }}
+
+        .modal-header {{
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }}
+
+        .modal-title {{
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }}
+
+        .modal-close {{
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #666;
+            transition: background 0.2s;
+        }}
+
+        .modal-close:hover {{
+            background: #e0e0e0;
+        }}
+
+        .modal-body {{
+            padding: 20px;
+        }}
+
+        .attribute-editor {{
+            margin-bottom: 15px;
+        }}
+
+        .attribute-editor label {{
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }}
+
+        .attribute-editor input,
+        .attribute-editor select,
+        .attribute-editor textarea {{
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }}
+
+        .attribute-editor textarea {{
+            min-height: 100px;
+            resize: vertical;
+        }}
+
+        .modal-footer {{
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }}
+
+        /* Helper Toast */
+        .toast {{
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 13px;
+            display: none;
+            z-index: 10000;
+            animation: slideIn 0.3s;
+            max-width: 300px;
+        }}
+
+        .toast.show {{
+            display: block;
+        }}
+
+        @keyframes slideIn {{
+            from {{
+                transform: translateY(20px);
+                opacity: 0;
+            }}
+            to {{
+                transform: translateY(0);
+                opacity: 1;
+            }}
+        }}
+
+        .toast ul {{
+            list-style: none;
+            margin-top: 8px;
+        }}
+
+        .toast li {{
+            margin: 4px 0;
+            font-size: 12px;
+        }}
+
+        .toast li:before {{
+            content: "• ";
+            color: #667eea;
+        }}
+
+        /* Sample Styles for Preview */
+        #preview h1, #preview h2, #preview h3 {{
+            margin: 20px 0 10px 0;
+        }}
+
+        #preview p {{
+            margin: 10px 0;
+            line-height: 1.6;
+        }}
+
+        #preview img {{
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }}
+
+        #preview table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }}
+
+        #preview th, #preview td {{
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #e0e0e0;
+        }}
+
+        #preview th {{
+            background: #667eea;
+            color: white;
+        }}
+
+        /* Hide edit indicators when saving */
+        .saving-mode .edit-indicator {{
+            display: none !important;
+        }}
+
+        .saving-mode * {{
+            cursor: default !important;
+        }}
+
+        .saving-mode .dragging {{
+            opacity: 1 !important;
+            box-shadow: none !important;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Right Panel: Preview Only -->
+        <div class="preview-panel" id="previewPanel">
+            <div class="preview-header">
+                <h2>👁️ Interactive Content</h2>
+                <span class="mode-indicator" id="modeIndicator">Normal Mode</span>
+                <button class="btn btn-undo" id="undoBtn" title="Undo" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
+                        <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
+                    </svg>
+                </button>
+                <button class="btn btn-save" id="saveImageBtn" title="Save as Image">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                    Save as Image
+                </button>
+                <button class="btn btn-advanced" id="advancedEditBtn">🎨 Advanced Edit</button>
+                <button class="btn btn-done" id="doneBtn">✓ Done</button>
+            </div>
+            <div class="preview-content">
+                <div id="preview">
+                    {input_html}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" id="editAttributes">
+            <span>🔧</span> Edit Attributes
+        </div>
+        <div class="context-menu-item" id="duplicateElement">
+            <span>📋</span> Duplicate
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item delete" id="deleteElement">
+            <span>🗑️</span> Delete
+        </div>
+    </div>
+
+    <!-- Attribute Editor Modal -->
+    <div class="modal" id="attributeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Element Attributes</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="attributeModalBody">
+                <!-- Attributes will be dynamically added here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-clear" id="cancelEdit">Cancel</button>
+                <button class="btn btn-run" id="saveAttributes">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <strong>🎯 Advanced Edit Mode Active!</strong>
+        <ul>
+            <li>Drag any element to reposition</li>
+            <li>Click text to edit inline</li>
+            <li>Click pencil icon to edit</li>
+            <li>Right-click for more options</li>
+            <li>Use undo button to revert changes</li>
+            <li>Chart.js charts are fully supported</li>
+            <li>Save as image feature available</li>
+        </ul>
+    </div>
+
+    <script>
+        const preview = document.getElementById('preview');
+        const advancedEditBtn = document.getElementById('advancedEditBtn');
+        const doneBtn = document.getElementById('doneBtn');
+        const modeIndicator = document.getElementById('modeIndicator');
+        const toast = document.getElementById('toast');
+        const contextMenu = document.getElementById('contextMenu');
+        const attributeModal = document.getElementById('attributeModal');
+        const attributeModalBody = document.getElementById('attributeModalBody');
+        const closeModal = document.getElementById('closeModal');
+        const cancelEdit = document.getElementById('cancelEdit');
+        const saveAttributes = document.getElementById('saveAttributes');
+        const undoBtn = document.getElementById('undoBtn');
+        const saveImageBtn = document.getElementById('saveImageBtn');
+        
+        let isEditMode = false;
+        const elementPositions = new Map();
+        let selectedElement = null;
+        let editHistory = [];
+        let currentHistoryIndex = -1;
+        let chartInstances = new Map(); // Store chart instances
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {{
+            // Execute scripts for Chart.js
+            executeScripts(preview);
+            
+            // Save initial state
+            saveState();
+            
+            // Wrap charts
+            wrapCharts();
+        }});
+
+        // Save as Image functionality
+        saveImageBtn.addEventListener('click', () => {{
+            saveAsImage();
+        }});
+
+        function saveAsImage() {{
+            // Temporarily disable edit mode and hide indicators
+            const wasEditMode = isEditMode;
+            const originalClasses = preview.className;
+            
+            // Add saving mode class to hide edit indicators
+            preview.classList.add('saving-mode');
+            
+            // If in edit mode, temporarily disable it
+            if (isEditMode) {{
+                disableEditMode(false); // Don't show toast
+            }}
+            
+            // Use html2canvas to capture the preview
+            html2canvas(preview, {{
+                backgroundColor: '#ffffff',
+                scale: 2, // Higher resolution
+                useCORS: true,
+                allowTaint: true,
+                scrollX: 0,
+                scrollY: 0,
+                width: preview.scrollWidth,
+                height: preview.scrollHeight,
+                onclone: function(clonedDoc) {{
+                    // Remove edit indicators from cloned document
+                    const indicators = clonedDoc.querySelectorAll('.edit-indicator');
+                    indicators.forEach(indicator => indicator.remove());
+                    
+                    // Remove dragging class
+                    const draggingElements = clonedDoc.querySelectorAll('.dragging');
+                    draggingElements.forEach(el => el.classList.remove('dragging'));
+                }}
+            }}).then(canvas => {{
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'interactive-content-' + new Date().getTime() + '.png';
+                link.href = canvas.toDataURL('image/png');
+                
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Restore original state
+                preview.classList.remove('saving-mode');
+                if (wasEditMode) {{
+                    enableEditMode(false); // Don't show toast
+                }}
+                
+                showToast('Image saved successfully!', 2000);
+            }}).catch(error => {{
+                console.error('Error saving image:', error);
+                showToast('Failed to save image. Please try again.', 3000);
+                
+                // Restore original state
+                preview.classList.remove('saving-mode');
+                if (wasEditMode) {{
+                    enableEditMode(false);
+                }}
+            }});
+        }}
+
+        // Execute scripts in the preview
+        function executeScripts(container) {{
+            const scripts = container.querySelectorAll('script');
+            scripts.forEach(script => {{
+                // Create a new script element
+                const newScript = document.createElement('script');
+                newScript.type = 'text/javascript';
+                
+                if (script.src) {{
+                    newScript.src = script.src;
+                }} else {{
+                    // For inline scripts, we need to execute them in the context of the preview
+                    const scriptContent = script.textContent;
+                    
+                    // Create a function that will execute the script
+                    const executeScript = new Function('document', 'window', 'Chart', scriptContent);
+                    
+                    // Execute the script with the preview's document and window
+                    try {{
+                        // Create a mock window object for the preview
+                        const previewWindow = {{
+                            Chart: window.Chart,
+                            document: preview,
+                            console: console
+                        }};
+                        
+                        executeScript(preview, previewWindow, window.Chart);
+                    }} catch (error) {{
+                        console.error('Error executing script:', error);
+                    }}
+                }}
+            }});
+        }}
+
+        // Wrap canvas elements in chart containers
+        function wrapCharts() {{
+            const canvases = preview.querySelectorAll('canvas');
+            canvases.forEach(canvas => {{
+                // Check if it's already wrapped
+                if (!canvas.closest('.chart-container')) {{
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'chart-container';
+                    canvas.parentNode.insertBefore(wrapper, canvas);
+                    wrapper.appendChild(canvas);
+                }}
+            }});
+        }}
+
+        // Advanced Edit Mode
+        advancedEditBtn.addEventListener('click', () => {{
+            enableEditMode();
+        }});
+
+        doneBtn.addEventListener('click', () => {{
+            disableEditMode();
+        }});
+
+        // Undo functionality
+        undoBtn.addEventListener('click', () => {{
+            if (currentHistoryIndex > 0) {{
+                currentHistoryIndex--;
+                restoreState(editHistory[currentHistoryIndex]);
+                updateUndoButton();
+                showToast('Undo successful!', 1500);
+            }}
+        }});
+
+        function updateUndoButton() {{
+            undoBtn.disabled = currentHistoryIndex <= 0;
+        }}
+
+        function saveState() {{
+            // Remove any states after current index (if we're not at the end)
+            if (currentHistoryIndex < editHistory.length - 1) {{
+                editHistory = editHistory.slice(0, currentHistoryIndex + 1);
+            }}
+            
+            // Save current state
+            const state = {{
+                html: preview.innerHTML,
+                positions: new Map(elementPositions)
+            }};
+            
+            editHistory.push(state);
+            currentHistoryIndex++;
+            
+            // Limit history to 50 states
+            if (editHistory.length > 50) {{
+                editHistory.shift();
+                currentHistoryIndex--;
+            }}
+            
+            updateUndoButton();
+        }}
+
+        function restoreState(state) {{
+            // Destroy existing charts
+            chartInstances.forEach(chart => {{
+                chart.destroy();
+            }});
+            chartInstances.clear();
+            
+            preview.innerHTML = state.html;
+            elementPositions.clear();
+            
+            // Restore positions
+            state.positions.forEach((value, key) => {{
+                elementPositions.set(key, value);
+            }});
+            
+            // Re-execute scripts
+            executeScripts(preview);
+            
+            // Reinitialize draggable elements if in edit mode
+            if (isEditMode) {{
+                setTimeout(() => {{
+                    initializeDraggables();
+                    wrapCharts();
+                }}, 100);
+            }} else {{
+                wrapCharts();
+            }}
+        }}
+
+        function enableEditMode(showToastMsg = true) {{
+            isEditMode = true;
+            preview.classList.add('edit-mode');
+            advancedEditBtn.style.display = 'none';
+            doneBtn.style.display = 'block';
+            modeIndicator.textContent = '✏️ Edit Mode';
+            modeIndicator.classList.add('active');
+            
+            initializeDraggables();
+            
+            if (showToastMsg) {{
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 5000);
+            }}
+        }}
+
+        function disableEditMode(showToastMsg = true) {{
+            isEditMode = false;
+            preview.classList.remove('edit-mode');
+            advancedEditBtn.style.display = 'block';
+            doneBtn.style.display = 'none';
+            modeIndicator.textContent = 'Normal Mode';
+            modeIndicator.classList.remove('active');
+            
+            // Remove contenteditable
+            const editables = preview.querySelectorAll('[contenteditable="true"]');
+            editables.forEach(el => el.removeAttribute('contenteditable'));
+            
+            // Remove edit indicators
+            const indicators = preview.querySelectorAll('.edit-indicator');
+            indicators.forEach(indicator => indicator.remove());
+            
+            if (showToastMsg) {{
+                toast.classList.remove('show');
+            }}
+        }}
+
+        function initializeDraggables() {{
+            // Select all elements in the preview, not just those with draggable class
+            const allElements = preview.querySelectorAll('*');
+            allElements.forEach(element => {{
+                // Skip the preview container itself
+                if (element === preview) return;
+                
+                makeDraggable(element);
+                makeEditable(element);
+                addEditIndicator(element);
+                addContextMenu(element);
+            }});
+        }}
+
+        function addEditIndicator(element) {{
+            // Skip canvas elements (charts) and their containers
+            if (element.tagName === 'CANVAS' || element.classList.contains('chart-container')) return;
+            
+            // Remove existing indicator if any
+            const existingIndicator = element.querySelector('.edit-indicator');
+            if (existingIndicator) existingIndicator.remove();
+            
+            // Add edit indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'edit-indicator';
+            indicator.textContent = '✏️';
+            
+            // Add click event to the indicator
+            indicator.addEventListener('click', (e) => {{
+                e.stopPropagation();
+                makeElementEditable(element);
+            }});
+            
+            element.appendChild(indicator);
+        }}
+
+        function makeElementEditable(element) {{
+            // Save state before editing
+            saveState();
+            
+            // Make element contenteditable
+            element.setAttribute('contenteditable', 'true');
+            element.focus();
+            
+            // Select all text
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            // Add event listener to save state when editing is done
+            element.addEventListener('blur', () => {{
+                element.removeAttribute('contenteditable');
+                saveState();
+            }}, {{ once: true }});
+            
+            // Also save state on Enter key
+            element.addEventListener('keydown', (e) => {{
+                if (e.key === 'Enter' && !e.shiftKey) {{
+                    e.preventDefault();
+                    element.blur();
+                }}
+            }});
+        }}
+
+        function makeDraggable(element) {{
+            // Skip canvas elements (charts) - but allow chart containers to be draggable
+            if (element.tagName === 'CANVAS') return;
+            
+            let isDragging = false;
+            let currentX = 0;
+            let currentY = 0;
+            let initialX = 0;
+            let initialY = 0;
+            let dragThreshold = 5; // Minimum pixels to move before dragging starts
+            let hasDragged = false;
+            
+            // Create a unique identifier for this element
+            const elementId = generateElementId(element);
+            
+            // Restore position if exists
+            if (elementPositions.has(elementId)) {{
+                const pos = elementPositions.get(elementId);
+                currentX = pos.x;
+                currentY = pos.y;
+                setTranslate(currentX, currentY, element);
+            }} else {{
+                elementPositions.set(elementId, {{ x: 0, y: 0 }});
+            }}
+
+            // Remove old listeners to avoid duplicates
+            element.onmousedown = null;
+            element.ontouchstart = null;
+
+            function dragStart(e) {{
+                if (!isEditMode) return;
+                if (window.getSelection().toString().length > 0) return;
+                if (e.target.isContentEditable && e.target !== element) return;
+                if (e.button !== 0) return; // Only left click
+                
+                // Don't drag if clicking on the edit indicator
+                if (e.target.classList.contains('edit-indicator')) return;
+
+                if (e.type === 'touchstart') {{
+                    initialX = e.touches[0].clientX - currentX;
+                    initialY = e.touches[0].clientY - currentY;
+                }} else {{
+                    initialX = e.clientX - currentX;
+                    initialY = e.clientY - currentY;
+                }}
+
+                isDragging = true;
+                hasDragged = false;
+                e.preventDefault();
+            }}
+
+            function drag(e) {{
+                if (!isDragging || !isEditMode) return;
+                e.preventDefault();
+
+                let deltaX, deltaY;
+                
+                if (e.type === 'touchmove') {{
+                    deltaX = e.touches[0].clientX - initialX;
+                    deltaY = e.touches[0].clientY - initialY;
+                }} else {{
+                    deltaX = e.clientX - initialX;
+                    deltaY = e.clientY - initialY;
+                }}
+
+                // Check if we've moved beyond the threshold
+                if (!hasDragged) {{
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    if (distance < dragThreshold) {{
+                        return; // Don't start dragging yet
+                    }}
+                    hasDragged = true;
+                    element.classList.add('dragging');
+                }}
+
+                currentX = deltaX;
+                currentY = deltaY;
+                setTranslate(currentX, currentY, element);
+            }}
+
+            function dragEnd(e) {{
+                if (!isDragging) return;
+                isDragging = false;
+                
+                if (hasDragged) {{
+                    element.classList.remove('dragging');
+                    elementPositions.set(elementId, {{ x: currentX, y: currentY }});
+                    
+                    // Save state after drag
+                    saveState();
+                }}
+                
+                hasDragged = false;
+            }}
+
+            function setTranslate(xPos, yPos, el) {{
+                el.style.transform = `translate(${{xPos}}px, ${{yPos}}px)`;
+                el.style.position = 'relative';
+            }}
+
+            element.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+
+            element.addEventListener('touchstart', dragStart, {{ passive: false }});
+            element.addEventListener('touchmove', drag, {{ passive: false }});
+            element.addEventListener('touchend', dragEnd);
+        }}
+
+        function makeEditable(element) {{
+            const isTextElement = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'SPAN', 'DIV', 'LI', 'TD', 'TH'].includes(element.tagName);
+            const hasNoComplexChildren = !element.querySelector('img, table, iframe, video, canvas');
+
+            if (isTextElement && hasNoComplexChildren) {{
+                element.setAttribute('contenteditable', 'true');
+                
+                element.addEventListener('focus', () => {{
+                    element.style.cursor = 'text';
+                    // Save state before editing
+                    saveState();
+                }});
+                
+                element.addEventListener('blur', () => {{
+                    element.style.cursor = isEditMode ? 'move' : 'default';
+                    // Save state after editing
+                    saveState();
+                }});
+            }}
+            
+            // Make table cells editable
+            if (element.tagName === 'TABLE') {{
+                const cells = element.querySelectorAll('td, th');
+                cells.forEach(cell => {{
+                    cell.setAttribute('contenteditable', 'true');
+                    
+                    cell.addEventListener('focus', () => {{
+                        cell.style.cursor = 'text';
+                        saveState();
+                    }});
+                    
+                    cell.addEventListener('blur', () => {{
+                        cell.style.cursor = 'default';
+                        saveState();
+                    }});
+                }});
+            }}
+        }}
+
+        function addContextMenu(element) {{
+            element.addEventListener('contextmenu', (e) => {{
+                if (!isEditMode) return;
+                
+                e.preventDefault();
+                selectedElement = element;
+                
+                // Position context menu
+                contextMenu.style.left = `${{e.clientX}}px`;
+                contextMenu.style.top = `${{e.clientY}}px`;
+                contextMenu.style.display = 'block';
+                
+                // Highlight selected element
+                element.style.outline = '2px solid #667eea';
+            }});
+        }}
+
+        // Context menu actions
+        document.getElementById('editAttributes').addEventListener('click', () => {{
+            if (!selectedElement) return;
+            
+            // Save state before editing attributes
+            saveState();
+            
+            openAttributeEditor(selectedElement);
+            contextMenu.style.display = 'none';
+        }});
+
+        document.getElementById('duplicateElement').addEventListener('click', () => {{
+            if (!selectedElement) return;
+            
+            // Save state before duplicating
+            saveState();
+            
+            const clone = selectedElement.cloneNode(true);
+            selectedElement.parentNode.insertBefore(clone, selectedElement.nextSibling);
+            
+            // If it's a chart container, reinitialize the chart
+            const canvas = clone.querySelector('canvas');
+            if (canvas) {{
+                setTimeout(() => {{
+                    executeScripts(clone);
+                }}, 100);
+            }}
+            
+            // Make the new element editable
+            makeDraggable(clone);
+            makeEditable(clone);
+            addEditIndicator(clone);
+            addContextMenu(clone);
+            
+            contextMenu.style.display = 'none';
+            showToast('Element duplicated!', 2000);
+        }});
+
+        document.getElementById('deleteElement').addEventListener('click', () => {{
+            if (!selectedElement) return;
+            
+            if (confirm('Delete this element?')) {{
+                // Save state before deleting
+                saveState();
+                
+                // Remove the element without affecting others
+                selectedElement.remove();
+                showToast('Element deleted!', 2000);
+            }}
+            
+            contextMenu.style.display = 'none';
+        }});
+
+        // Close context menu when clicking elsewhere
+        document.addEventListener('click', () => {{
+            contextMenu.style.display = 'none';
+            
+            // Remove highlight from selected element
+            if (selectedElement) {{
+                selectedElement.style.outline = '';
+                selectedElement = null;
+            }}
+        }});
+
+        // Attribute Editor Modal
+        function openAttributeEditor(element) {{
+            selectedElement = element;
+            attributeModalBody.innerHTML = '';
+            
+            // Add common attributes
+            const commonAttributes = ['id', 'class', 'style', 'src', 'href', 'alt', 'title'];
+            
+            // Get all existing attributes
+            const attributes = Array.from(element.attributes);
+            
+            // Create editors for existing attributes
+            attributes.forEach(attr => {{
+                const editor = createAttributeEditor(attr.name, attr.value);
+                attributeModalBody.appendChild(editor);
+            }});
+            
+            // Add editors for common attributes that don't exist yet
+            commonAttributes.forEach(attrName => {{
+                if (!element.hasAttribute(attrName)) {{
+                    const editor = createAttributeEditor(attrName, '');
+                    attributeModalBody.appendChild(editor);
+                }}
+            }});
+            
+            // Add button to add custom attribute
+            const addCustomBtn = document.createElement('button');
+            addCustomBtn.className = 'btn btn-run';
+            addCustomBtn.textContent = '+ Add Custom Attribute';
+            addCustomBtn.style.marginTop = '10px';
+            addCustomBtn.addEventListener('click', () => {{
+                const customEditor = createAttributeEditor('', '');
+                attributeModalBody.insertBefore(customEditor, addCustomBtn);
+            }});
+            
+            attributeModalBody.appendChild(addCustomBtn);
+            
+            // Show modal
+            attributeModal.classList.add('active');
+        }}
+
+        function createAttributeEditor(name, value) {{
+            const editor = document.createElement('div');
+            editor.className = 'attribute-editor';
+            
+            const nameLabel = document.createElement('label');
+            nameLabel.textContent = 'Attribute Name:';
+            
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.value = name;
+            nameInput.placeholder = 'e.g., class, id, style';
+            
+            const valueLabel = document.createElement('label');
+            valueLabel.textContent = 'Attribute Value:';
+            valueLabel.style.marginTop = '10px';
+            
+            const valueInput = document.createElement('textarea');
+            valueInput.value = value;
+            valueInput.placeholder = 'Enter attribute value';
+            
+            editor.appendChild(nameLabel);
+            editor.appendChild(nameInput);
+            editor.appendChild(valueLabel);
+            editor.appendChild(valueInput);
+            
+            return editor;
+        }}
+
+        // Save attributes
+        saveAttributes.addEventListener('click', () => {{
+            if (!selectedElement) return;
+            
+            // Clear all existing attributes
+            const attributes = Array.from(selectedElement.attributes);
+            attributes.forEach(attr => {{
+                if (attr.name !== 'contenteditable') {{
+                    selectedElement.removeAttribute(attr.name);
+                }}
+            }});
+            
+            // Set new attributes
+            const editors = attributeModalBody.querySelectorAll('.attribute-editor');
+            editors.forEach(editor => {{
+                const nameInput = editor.querySelector('input');
+                const valueInput = editor.querySelector('textarea');
+                
+                if (nameInput.value.trim()) {{
+                    selectedElement.setAttribute(nameInput.value, valueInput.value);
+                }}
+            }});
+            
+            // Close modal
+            attributeModal.classList.remove('active');
+            showToast('Attributes updated!', 2000);
+            
+            // Save state after changing attributes
+            saveState();
+        }});
+
+        // Cancel edit
+        cancelEdit.addEventListener('click', () => {{
+            attributeModal.classList.remove('active');
+        }});
+
+        // Close modal
+        closeModal.addEventListener('click', () => {{
+            attributeModal.classList.remove('active');
+        }});
+
+        function generateElementId(element) {{
+            // Create a unique identifier based on tag name, content, and position
+            const tagName = element.tagName;
+            const content = element.textContent ? element.textContent.substring(0, 20) : '';
+            const position = Array.from(element.parentNode.children).indexOf(element);
+            return `${{tagName}}-${{content}}-${{position}}`;
+        }}
+
+        function showToast(message, duration = 3000) {{
+            const tempToast = document.createElement('div');
+            tempToast.className = 'toast show';
+            tempToast.textContent = message;
+            tempToast.style.bottom = '100px';
+            document.body.appendChild(tempToast);
+            
+            setTimeout(() => {{
+                tempToast.remove();
+            }}, duration);
+        }}
+    </script>
+</body>
+</html>"""
+    
+    return output_html
+
+# Example usage
+if __name__ == "__main__":
+    # Sample HTML input
+    sample_html=""
+    with open("slides/3.html", "r", encoding='utf-8') as f:
+        sample_html = f.read()
+    
+    # Generate the editable HTML
+    editable_html = make_editable_html(sample_html)
+    
+    # Save to a file
+    with open("editable_output.html", "w", encoding='utf-8') as f:
+        f.write(editable_html)
+    
+    print("Editable HTML file created: editable_output.html")

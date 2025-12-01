@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+presentation_venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+key.txt
+
+# Config with API keys (uncomment if you don't want to track config)
+# config.yaml
+
+# Logs
+*.log
+ppt_creation.log
+
+# Generated files
+slides/
+user_files/
+user_images/
+*.pdf
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Playwright
+playwright-report/
+test-results/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
