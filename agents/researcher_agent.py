@@ -20,21 +20,3 @@ def get_web_researcher():
             name="researcher_agent",
         )
     return _web_researcher
-
-# For backward compatibility
-web_researcher = None  # Will be initialized on first use via get_web_researcher()
-
-
-# async def main():
-#     result = await web_researcher.ainvoke(
-#         {"messages": "Create ppt on comparison of memory for ai agents langmem, mem0"}
-#     )
-#     print(result)
-
-#     for i in result["messages"]:
-#         i.pretty_print()
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
-
-

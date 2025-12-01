@@ -20,19 +20,3 @@ def get_files_agent():
             tools=[summarize_document, summarize_images]
         )
     return _files_agent
-
-# For backward compatibility
-files_agent = None  # Will be initialized on first use via get_files_agent()
-
-
-# async def runner():
-#     response = await files_agent.ainvoke(
-#         {"messages": "summarize the somatosensory.pdf file"}
-#     )
-
-#     for i in response["messages"]:
-#         i.pretty_print()
-
-# if __name__ == '__main__':
-#     asyncio.run(runner())
-

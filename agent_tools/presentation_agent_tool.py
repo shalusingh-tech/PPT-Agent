@@ -16,9 +16,7 @@ from config_loader import get_llm
 from PIL import Image
 import io
 
-# Remove PIL decompression bomb limit for large images (16K support)
 Image.MAX_IMAGE_PIXELS = None
-
 
 thread_id = '25'
 _ppt_creator = None
@@ -38,27 +36,18 @@ def get_ppt_creator():
 
 
 def setup_slides_directory():
-    """
-    Setup slides directory before creating slides.
-    If exists, empty it. If not, create it.
-    """
+    """Setup slides directory - empty if exists, create if not."""
     slides_dir = "slides"
     
     if os.path.exists(slides_dir):
-        # Empty the directory
         shutil.rmtree(slides_dir)
-        logging.info(f"Emptied existing slides directory: {slides_dir}")
     
-    # Create fresh directory
     os.makedirs(slides_dir)
-    logging.info(f"Created fresh slides directory: {slides_dir}")
+    logging.info(f"Slides directory ready: {slides_dir}")
 
 
 def _convert_slides_to_pdf_sync():
-    """
-    Synchronous PDF conversion using Playwright sync API.
-    Runs in a separate thread to avoid Windows asyncio issues.
-    """
+    """Synchronous PDF conversion using Playwright."""
     try:
         from playwright.sync_api import sync_playwright
         import requests
@@ -83,7 +72,6 @@ def _convert_slides_to_pdf_sync():
         
         logging.info(f"Found {len(html_files)} slides to convert to PDF")
         
-        # Function to check if image URL is accessible
         def check_image_url(url: str) -> bool:
             try:
                 response = requests.head(url, timeout=5)
@@ -91,7 +79,6 @@ def _convert_slides_to_pdf_sync():
             except Exception:
                 return False
         
-        # Function to process HTML and handle broken images
         def process_html_images(html_content: str) -> str:
             # Find all image URLs in the HTML
             img_pattern = r'<img[^>]+src=["\']([^"\']+)["\']'
@@ -270,11 +257,7 @@ def _convert_slides_to_pdf_sync():
 
 
 async def convert_slides_to_pdf():
-    """
-    Convert slides to PDF by running a separate Python process.
-    This completely avoids Windows asyncio subprocess issues.
-    Uses Html2Image for high-resolution output.
-    """
+    """Convert slides to PDF using Html2Image subprocess."""
     import subprocess
     
     logging.info("Starting PDF conversion (using Html2Image subprocess)")
@@ -329,13 +312,12 @@ async def convert_slides_to_pdf():
 
 @tool
 async def create_slide(outline: str, slide_no: int) -> str:
-    '''Helps to create one slide at a time'''
+    """Create one slide at a time."""
     try:
-        # Add delay before API call to respect rate limits (sequential processing)
         import asyncio
-        await asyncio.sleep(3)  # Wait 3 seconds between slides
+        await asyncio.sleep(3)
         
-        logging.info(f"Inside the create slide tool with outline {outline}")
+        logging.info(f"Creating slide {slide_no}")
         ppt_creator = get_ppt_creator()
         result = await ppt_creator.ainvoke(
             {"messages": f"Create a single slide using the outline {outline}"},
@@ -343,12 +325,9 @@ async def create_slide(outline: str, slide_no: int) -> str:
         )
 
         content = result["messages"][-1].content
-        logging.info(f"PPT Creator response: {content[:500]}...")  # Log first 500 chars
         
-        # Try to extract HTML code
         start = content.find('```html')
         if start == -1:
-            # Try without language specifier
             start = content.find('```')
         
         if start != -1:
@@ -359,23 +338,17 @@ async def create_slide(outline: str, slide_no: int) -> str:
                 else:
                     html_code = content[start + 3:end].strip()
             else:
-                html_code = content  # Use full content if no closing ```
+                html_code = content
         else:
-            html_code = content  # Use full content if no code blocks
+            html_code = content
 
-        logging.info(f"Extracted HTML code length: {len(html_code)}")
-
-        # create slide dir. if not exist
         os.makedirs("slides", exist_ok=True)
-        logging.info("Slides directory created/verified")
         
         async with aiofiles.open(f"slides/{slide_no}.html", 'w', encoding="utf-8") as f:
             await f.write(html_code)
 
-        logging.info(f"Slide {slide_no} saved successfully to slides/{slide_no}.html")
-        return f"{slide_no} has been successfully created and saved"
+        logging.info(f"Slide {slide_no} saved")
+        return f"Slide {slide_no} created successfully"
     except Exception as e:
-        logging.error(f"Faced error while creating slide inside create_slide tool and error is {str(e)}")
-        return f"There was an error creating the ppt the error is {e}"
-
-
+        logging.error(f"Error creating slide: {str(e)}")
+        return f"Error creating slide: {e}"

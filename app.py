@@ -11,7 +11,6 @@ import io
 from datetime import datetime
 import requests
 
-# Set page config first (must be first Streamlit command)
 st.set_page_config(
     page_title="Presenter Generator Agent",
     page_icon="assets/logo.png",
@@ -19,7 +18,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from langchain_core.messages import HumanMessage
@@ -30,25 +28,22 @@ from agents.researcher_agent import get_web_researcher
 from agent_tools.presentation_agent_tool import setup_slides_directory, convert_slides_to_pdf
 from logger import logging
 
-# Constants
 SLIDES_DIR = "slides"
 USER_FILES_DIR = "user_files"
 USER_IMAGES_DIR = "user_images"
 
-# Ensure directories exist
 os.makedirs(USER_FILES_DIR, exist_ok=True)
 os.makedirs(USER_IMAGES_DIR, exist_ok=True)
 os.makedirs(SLIDES_DIR, exist_ok=True)
 
 
 def validate_url(url: str) -> tuple[bool, str]:
-    """Check if URL is reachable and readable"""
+    """Check if URL is reachable."""
     if not url or not url.strip():
-        return True, ""  # No URL provided, skip validation
+        return True, ""
     
     url = url.strip()
     
-    # Check URL format
     if not url.startswith(('http://', 'https://')):
         return False, "URL must start with http:// or https://"
     
@@ -80,21 +75,20 @@ def validate_url(url: str) -> tuple[bool, str]:
 
 
 def validate_files(uploaded_files) -> tuple[bool, str]:
-    """Check if uploaded files are readable"""
+    """Check if uploaded files are readable."""
     if not uploaded_files:
-        return True, ""  # No files provided, skip validation
+        return True, ""
     
     errors = []
     
     for f in uploaded_files:
         try:
-            # Try to read the file content
             content = f.read()
-            f.seek(0)  # Reset file pointer for later use
+            f.seek(0)
             
             if len(content) == 0:
                 errors.append(f"'{f.name}' is empty")
-            elif len(content) > 10 * 1024 * 1024:  # 10MB limit
+            elif len(content) > 10 * 1024 * 1024:
                 errors.append(f"'{f.name}' is too large (max 10MB)")
                 
         except Exception as e:
@@ -106,8 +100,8 @@ def validate_files(uploaded_files) -> tuple[bool, str]:
     return True, ""
 
 
-# Progress tracking class
 class ProgressTracker:
+    """Track generation progress with visual steps."""
     def __init__(self, steps_container):
         self.steps_container = steps_container
         self.completed_steps = []
@@ -121,8 +115,7 @@ class ProgressTracker:
         ]
     
     def update(self, step_id: str, message: str = None):
-        """Update progress to a specific step"""
-        # Handle completion
+        """Update progress to a specific step."""
         if step_id == "complete":
             self.is_complete = True
             if "slides" not in self.completed_steps:
@@ -131,13 +124,11 @@ class ProgressTracker:
             self._render_steps()
             return
         
-        # Map pdf and files to appropriate steps
         if step_id == "pdf":
             step_id = "slides"
         elif step_id == "files":
             step_id = "research"
         
-        # Mark previous step as completed if moving to new step
         if self.current_step and self.current_step != step_id:
             if self.current_step not in self.completed_steps:
                 self.completed_steps.append(self.current_step)
@@ -146,25 +137,21 @@ class ProgressTracker:
         self._render_steps()
     
     def _render_steps(self):
-        """Render the steps with tick marks"""
+        """Render the steps with status indicators."""
         self.steps_container.empty()
         
         with self.steps_container.container():
             for step in self.steps:
                 if self.is_complete or step["id"] in self.completed_steps:
-                    # Completed - green tick
                     st.markdown(f"✅ {step['label']}")
                 elif step["id"] == self.current_step:
-                    # In progress - spinner
                     st.markdown(f"🔄 {step['label']}...")
                 else:
-                    # Pending - empty box
                     st.markdown(f"⬜ {step['label']}")
 
 
 async def run_generation_with_progress(task: str, files: list, tracker: ProgressTracker):
-    """Run the presentation generation with real-time progress updates"""
-    
+    """Run presentation generation with progress updates."""
     state = {
         "files_data": "",
         "web_content": "",
@@ -172,13 +159,11 @@ async def run_generation_with_progress(task: str, files: list, tracker: Progress
         "ppt_content": ""
     }
     
-    # Step 1: Router - determine path
     tracker.update("router", "Analyzing your request")
-    await asyncio.sleep(0.3)  # Small delay for UI update
+    await asyncio.sleep(0.3)
     
     has_files = files and len(files) > 0
     
-    # Step 2: Research or File Analysis
     if has_files:
         tracker.update("files", "Reading and analyzing your files")
         files_agent = get_files_agent()
@@ -192,12 +177,11 @@ async def run_generation_with_progress(task: str, files: list, tracker: Progress
         web_researcher = get_web_researcher()
         response = await web_researcher.ainvoke(
             {"messages": "Research on this topic: " + task},
-            config={"recursion_limit": 30}  # Increased limit for thorough research
+            config={"recursion_limit": 30}
         )
         state["web_content"] = response["messages"][-1].content
         logging.info("Web research complete")
     
-    # Step 3: Create Outline
     tracker.update("outline", "Creating presentation outline")
     outline_agent = get_outline_agent()
     
@@ -212,19 +196,17 @@ async def run_generation_with_progress(task: str, files: list, tracker: Progress
     state["outline"] = response["messages"][-1].content
     logging.info("Outline creation complete")
     
-    # Step 4: Generate Slides
     tracker.update("slides", "Generating HTML slides")
     setup_slides_directory()
     
     ppt_agent = get_ppt_agent()
     response = await ppt_agent.ainvoke(
         {"messages": "This is the outline: " + state["outline"]},
-        config={"recursion_limit": 50}  # Higher limit for multiple slide creation
+        config={"recursion_limit": 50}
     )
     state["ppt_content"] = response["messages"][-1].content
     logging.info("Slide generation complete")
     
-    # Step 5: Convert to PDF
     tracker.update("pdf", "Converting slides to PDF")
     pdf_path = await convert_slides_to_pdf()
     logging.info(f"PDF conversion complete: {pdf_path}")
@@ -236,7 +218,7 @@ async def run_generation_with_progress(task: str, files: list, tracker: Progress
 
 
 def get_slide_files():
-    """Get all HTML slide files sorted by number"""
+    """Get all HTML slide files sorted by number."""
     if not os.path.exists(SLIDES_DIR):
         return []
     
@@ -250,7 +232,7 @@ def get_slide_files():
 
 
 def save_uploaded_file(uploaded_file, directory):
-    """Save uploaded file to specified directory"""
+    """Save uploaded file to specified directory."""
     file_path = os.path.join(directory, uploaded_file.name)
     with open(file_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
@@ -258,11 +240,10 @@ def save_uploaded_file(uploaded_file, directory):
 
 
 def render_slide_preview(slide_path):
-    """Render HTML slide in an iframe"""
+    """Render HTML slide in an iframe."""
     with open(slide_path, 'r', encoding='utf-8') as f:
         html_content = f.read()
     
-    # Encode HTML for iframe
     b64 = base64.b64encode(html_content.encode()).decode()
     iframe_html = f'''
         <div style="border: 2px solid #e0e0e0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
@@ -277,19 +258,16 @@ def render_slide_preview(slide_path):
 
 
 def render_pdf_preview(pdf_path):
-    """Render PDF preview by converting pages to images with Previous/Next buttons"""
+    """Render PDF preview with navigation buttons."""
     try:
-        import fitz  # PyMuPDF
+        import fitz
         
-        # Open PDF
         doc = fitz.open(pdf_path)
         num_pages = len(doc)
         
-        # Initialize page number in session state
         if 'pdf_page_num' not in st.session_state:
             st.session_state.pdf_page_num = 1
         
-        # Ensure page number is valid
         if st.session_state.pdf_page_num < 1:
             st.session_state.pdf_page_num = 1
         if st.session_state.pdf_page_num > num_pages:
@@ -297,7 +275,6 @@ def render_pdf_preview(pdf_path):
         
         page_num = st.session_state.pdf_page_num
         
-        # Navigation row with buttons and page indicator
         col1, col2, col3 = st.columns([1, 2, 1])
         
         with col1:
@@ -313,13 +290,11 @@ def render_pdf_preview(pdf_path):
                 st.session_state.pdf_page_num += 1
                 st.rerun()
         
-        # Render selected page at 1x resolution (smaller)
         page = doc[page_num - 1]
         mat = fitz.Matrix(1.0, 1.0)
         pix = page.get_pixmap(matrix=mat)
         img_data = pix.tobytes("png")
         
-        # Display image centered with max width
         col1, col2, col3 = st.columns([1, 6, 1])
         with col2:
             st.image(img_data, use_container_width=True)
@@ -335,7 +310,6 @@ def render_pdf_preview(pdf_path):
 
 
 def main():
-    # Custom CSS
     st.markdown("""
         <style>
         .stProgress > div > div > div > div {
@@ -466,13 +440,11 @@ def main():
         </style>
     """, unsafe_allow_html=True)
     
-    # Initialize session state for generation tracking
     if 'is_generating' not in st.session_state:
         st.session_state.is_generating = False
     if 'stop_generation' not in st.session_state:
         st.session_state.stop_generation = False
     
-    # Load config and initialize LLM settings from config.yaml
     config_path = Path(__file__).parent / "config.yaml"
     if 'llm_model' not in st.session_state or 'llm_api_key' not in st.session_state:
         with open(config_path, "r") as f:
@@ -480,21 +452,17 @@ def main():
         st.session_state.llm_model = config.get("default", {}).get("model", "")
         st.session_state.llm_api_key = config.get("default", {}).get("api_key", "")
     
-    # Check if generation is in progress
     is_generating = st.session_state.is_generating
     
-    # Header with logo only (centered)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.image("assets/logo.png", use_container_width=True)
     st.markdown('<p class="sub-header" style="text-align: center;">Create stunning presentations with AI-powered content generation</p>', unsafe_allow_html=True)
     
-    # Sidebar
     with st.sidebar:
         st.image("assets/logo.png", width=80)
         st.markdown("## ⚙️ Settings")
         
-        # Show generating indicator
         if is_generating:
             st.error("🔄 **Generating...**")
         
@@ -509,7 +477,6 @@ def main():
         
         st.divider()
         
-        # LLM Configuration
         st.markdown("### 🤖 LLM Settings")
         
         llm_model = st.text_input(
@@ -531,14 +498,11 @@ def main():
             key="llm_api_key_input"
         )
         
-        # Save button to update config
         if st.button("💾 Save LLM Config", disabled=is_generating, use_container_width=True):
-            # Load existing config
             config_path = Path(__file__).parent / "config.yaml"
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
             
-            # Update all sections with new model and api_key
             config["default"]["model"] = llm_model
             config["default"]["api_key"] = llm_api_key
             
@@ -550,15 +514,12 @@ def main():
                 config["tools"][tool]["model"] = llm_model
                 config["tools"][tool]["api_key"] = llm_api_key
             
-            # Write back to config file
             with open(config_path, "w") as f:
                 yaml.dump(config, f, default_flow_style=False, sort_keys=False)
             
-            # Update session state
             st.session_state.llm_model = llm_model
             st.session_state.llm_api_key = llm_api_key
             
-            # Clear the config cache in config_loader
             import config_loader
             config_loader._config_cache = None
             
@@ -577,12 +538,10 @@ def main():
             key="doc_uploader"
         )
         
-        # Save uploaded documents to user_files
         if uploaded_docs:
             for f in uploaded_docs:
                 save_uploaded_file(f, USER_FILES_DIR)
         
-        # Show contents of user_files folder
         user_files_list = [f for f in os.listdir(USER_FILES_DIR) if os.path.isfile(os.path.join(USER_FILES_DIR, f))]
         if user_files_list:
             col_status, col_clear = st.columns([3, 2])
@@ -614,12 +573,10 @@ def main():
             key="img_uploader"
         )
         
-        # Save uploaded images to user_images
         if uploaded_images:
             for f in uploaded_images:
                 save_uploaded_file(f, USER_IMAGES_DIR)
         
-        # Show contents of user_images folder
         user_images_list = [f for f in os.listdir(USER_IMAGES_DIR) if os.path.isfile(os.path.join(USER_IMAGES_DIR, f))]
         if user_images_list:
             col_status, col_clear = st.columns([3, 2])
@@ -660,14 +617,11 @@ def main():
         st.caption("Presenter Generator Agent uses LangGraph and multiple AI agents to create beautiful presentations.")
         
     
-    # Main content tabs
     tab1, tab2, tab3 = st.tabs(["🎨 Create", "📄 Preview PDF", "📥 Download"])
     
-    # ==================== CREATE TAB ====================
     with tab1:
         st.markdown("### 📝 Create Your Presentation")
         
-        # Show generating status banner
         if is_generating:
             st.warning("⏳ **Generation in progress...** Please wait or click Stop to cancel.")
         
@@ -692,7 +646,6 @@ def main():
             )
         
         with col2:
-            # Get counts from folders
             docs_count = len([f for f in os.listdir(USER_FILES_DIR) if os.path.isfile(os.path.join(USER_FILES_DIR, f))])
             imgs_count = len([f for f in os.listdir(USER_IMAGES_DIR) if os.path.isfile(os.path.join(USER_IMAGES_DIR, f))])
             
@@ -706,7 +659,6 @@ def main():
         
         st.divider()
         
-        # Generate and Stop buttons
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             generate_btn = st.button(
@@ -716,7 +668,6 @@ def main():
                 disabled=not topic or is_generating
             )
         
-        # Show stop button if generating
         if is_generating:
             col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
@@ -726,12 +677,9 @@ def main():
                     st.warning("⚠️ Generation stopped by user.")
                     st.rerun()
         
-        # Generation process
         if generate_btn and topic and not is_generating:
-            # Validate URL and files first
             validation_passed = True
             
-            # Check URL
             if source_url:
                 with st.spinner("🔍 Checking URL accessibility..."):
                     url_valid, url_error = validate_url(source_url)
@@ -741,30 +689,24 @@ def main():
                     else:
                         st.success("✅ URL is accessible")
             
-            # Stop if validation failed
             if not validation_passed:
                 st.warning("⚠️ Please fix the errors above and try again.")
                 st.stop()
             
-            # Set generating state
             st.session_state.is_generating = True
             st.session_state.stop_generation = False
             
             st.divider()
             st.markdown("### 🔄 Progress")
             
-            # Progress UI elements
             steps_container = st.empty()
             
-            # Create progress tracker
             tracker = ProgressTracker(steps_container)
             
-            # Build task string
             task = f"create a {num_slides} slide ppt on {topic}"
             if source_url:
                 task += f" use this link for your source: link:{source_url}"
             
-            # Get file paths from user_files and user_images folders
             file_paths = []
             for f in os.listdir(USER_FILES_DIR):
                 fpath = os.path.join(USER_FILES_DIR, f)
@@ -775,18 +717,15 @@ def main():
                 if os.path.isfile(fpath):
                     file_paths.append(fpath)
             
-            # Run generation
             try:
                 state, pdf_path = asyncio.run(
                     run_generation_with_progress(task, file_paths, tracker)
                 )
                 
-                # Reset generating state on success
                 st.session_state.is_generating = False
                 
                 st.balloons()
                 
-                # Show summary
                 with st.expander("📋 Generation Summary", expanded=True):
                     col1, col2, col3 = st.columns(3)
                     
@@ -801,7 +740,6 @@ def main():
                     st.success("🎉 Your presentation is ready! Check the Preview and Download tabs.")
                 
             except Exception as e:
-                # Reset generating state on error
                 st.session_state.is_generating = False
                 
                 st.error(f"❌ An error occurred: {str(e)}")
@@ -810,7 +748,6 @@ def main():
                 with st.expander("🔍 Error Details"):
                     st.code(traceback.format_exc())
     
-    # ==================== PREVIEW PDF TAB ====================
     with tab2:
         st.markdown("### 📄 Preview PDF")
         
@@ -819,12 +756,10 @@ def main():
         if not os.path.exists(pdf_path):
             st.info("📭 No PDF generated yet. Go to the **Create** tab to generate a presentation.")
         else:
-            # PDF Preview
             render_pdf_preview(pdf_path)
             
             st.divider()
             
-            # Quick download button
             col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
                 with open(pdf_path, "rb") as f:
@@ -838,7 +773,6 @@ def main():
                         key="pdf_download_preview_tab"
                     )
     
-    # ==================== DOWNLOAD TAB ====================
     with tab3:
         st.markdown("### 📥 Download Your Presentation")
         
@@ -850,7 +784,6 @@ def main():
         else:
             col1, col2 = st.columns(2)
             
-            # PDF Download
             with col1:
                 st.markdown("#### 📄 PDF Presentation")
                 
@@ -870,13 +803,11 @@ def main():
                 else:
                     st.warning("⚠️ PDF not generated yet")
             
-            # HTML Download
             with col2:
                 st.markdown("#### 🌐 HTML Slides")
                 
                 st.success(f"✅ {len(slides)} slides ready")
                 
-                # Create ZIP
                 zip_buffer = io.BytesIO()
                 with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
                     for slide in slides:
@@ -894,7 +825,6 @@ def main():
             
             st.divider()
             
-            # Individual slides
             st.markdown("#### 📑 Individual Slides")
             
             cols = st.columns(5)

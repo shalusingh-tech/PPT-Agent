@@ -1,29 +1,20 @@
-"""
-Alternative PDF conversion using Html2Image package.
-Run this script to convert HTML slides to PDF.
-Renders at native 4K resolution for crisp output.
-"""
+"""PDF conversion using Html2Image package."""
 import os
 import sys
 import glob
 from html2image import Html2Image
 from PIL import Image
 
-# Remove PIL limit for large images
 Image.MAX_IMAGE_PIXELS = None
 
-# Render at native slide size (content designed for 1280x720)
-# Extra height to capture any overflow content
 VIEWPORT_WIDTH = 1280
 VIEWPORT_HEIGHT = 900
-
-# PDF page dimensions - 4K (16:9 aspect ratio)
 PAGE_WIDTH = 3840
 PAGE_HEIGHT = 2160
 
 
 def find_chromium_path():
-    """Find Playwright's bundled Chromium executable or Chrome (cross-platform)"""
+    """Find Chromium or Chrome browser (cross-platform)."""
     
     # Get user home directory (works on all platforms)
     home = os.path.expanduser("~")
@@ -81,7 +72,7 @@ def find_chromium_path():
 
 
 def convert_slides_to_pdf():
-    """Convert HTML slides to PDF using Html2Image"""
+    """Convert HTML slides to PDF."""
     
     slides_dir = "slides"
     output_dir = "slides"
@@ -112,7 +103,7 @@ def convert_slides_to_pdf():
         print("ERROR: Could not find Chrome or Chromium.")
         return None
     
-    # Initialize Html2Image at native 4K resolution
+    # Initialize Html2Image
     hti = Html2Image(
         output_path=output_dir,
         browser_executable=chrome_path,
@@ -138,7 +129,7 @@ def convert_slides_to_pdf():
         with open(filepath, 'r', encoding='utf-8') as f:
             html_content = f.read()
         
-        # CSS to render at native slide size
+        # CSS for rendering
         wrapper_css = f"""
             * {{ box-sizing: border-box !important; }}
             html, body {{
@@ -183,7 +174,6 @@ def convert_slides_to_pdf():
         return None
     
     print("Converting screenshots to PDF...")
-    print(f"Target page size: {PAGE_WIDTH}x{PAGE_HEIGHT} pixels (16:9)")
     
     # Convert screenshots to PDF
     images = []
@@ -195,21 +185,16 @@ def convert_slides_to_pdf():
         if img.mode in ('RGBA', 'LA', 'P'):
             img = img.convert('RGB')
         
-        # Crop to 16:9 aspect ratio from top
         target_height = int(img.width * 9 / 16)
         if img.height > target_height:
-            print(f"  Cropping to 16:9: {img.width}x{img.height} -> {img.width}x{target_height}")
             img = img.crop((0, 0, img.width, target_height))
         
-        # Resize if needed
         if img.width != PAGE_WIDTH or img.height != PAGE_HEIGHT:
-            print(f"  Resizing: {img.width}x{img.height} -> {PAGE_WIDTH}x{PAGE_HEIGHT}")
             img_resized = img.resize((PAGE_WIDTH, PAGE_HEIGHT), Image.LANCZOS)
             img.close()
             img = img_resized
         
         images.append(img)
-        print(f"  Final: {img.width}x{img.height}")
     
     # Save as PDF
     pdf_path = os.path.join(slides_dir, "presentation.pdf")

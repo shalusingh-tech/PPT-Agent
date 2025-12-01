@@ -1,72 +1,59 @@
 Slide 1: Cover Slide
-- Open-Weight LLM Landscape and Architecture Comparison
-Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co
+- Title: Open-Weight LLM Landscape and Architecture Comparison
+- Subtitle: Exploring Key Models, Architectures, and Trends
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/hero.jpg
 
 Slide 2: Table of Contents
-- What are Open-Weight LLMs?
-- Why They Are Important
-- Basic Transformer Architecture
-- Main Open Models (LLaMA, Mistral, Mixtral)
+- Open-Weight LLMs Overview
+- Transformer Basics
+- Main Open Models
 - Dense vs. MoE
 - Positional Embeddings
 - Attention Improvements
 - Context Length & Performance
 - Future Trends
-Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/11.png
-
-Slide 3: What are Open-Weight LLMs?
-- Modern LLMs from transformer blocks
-- Components: self-attention, MLP (feedforward), normalization, learned weights
-- Share code, training data, ablation studies (e.g., OLMo 2 for transparency)
-Visual/Images: https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https://substack-post-media.s3.amazonaws.com/public/images/53956ae8-9cd8-474e-8c10-ef6bddb88164_1600x938.png
-
-Slide 4: Why They Are Important
-- Transparency enables research community access (code, data, ablations)
-- Innovations reduce memory for long contexts
-- Enable tasks: book summarization, legal docs, code analysis
-- Democratize AI beyond closed models
-Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/11.png
-
-Slide 5: Basic Transformer Architecture
-- Layered: self-attention, feedforward (MLP) layers, normalization
-- Core for context handling in modern LLMs
 Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/18.png
 
-Slide 6: Main Open Models (LLaMA, Mistral, Mixtral)
-- Leaders: LLaMA series, Mistral, Mixtral
-- Compared on architecture, efficiency, performance
-Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co
+Slide 3: Open-Weight LLMs Overview
+- Definition: Trained weights publicly released for full access to architecture, code, weights (unlike closed models)
+- Importance: Transparency, community improvements, cost-effective customization, rapid innovation; rivals closed models in benchmarks
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/hero.jpg
 
-Slide 7: Dense vs. MoE
-- Dense: activates all parameters
-- MoE (Mixture-of-Experts): activates parameter subsets (e.g., Mixtral)
-- MoE cuts compute, maintains performance
-Visual/Images: https://www.maginative.com/content/images/2023/12/GBEQckjX0AAoGq-.jpg
-
-Slide 8: Positional Embeddings
-- Encode sequence order in transformers
-- Key for context/attention processing
-Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/18.png
-
-Slide 9: Attention Improvements
-- GQA (Grouped Query Attention)
-- Sliding Windows
-- Variants: causal/self-attention
-- Reduce memory for long contexts
-Visual/Images: https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https://substack-post-media.s3.amazonaws.com/public/images/53956ae8-9cd8-474e-8c10-ef6bddb88164_1600x938.png
-
-Slide 10: Context Length & Performance
-- Sliding windows enable huge contexts (books, legal docs, code)
-- Memory/performance trade-offs
-- Boosted by attention innovations
+Slide 4: Basic Transformer Architecture
+- Stacked decoder layers: Self-attention, FFN MLP, RMSNorm/LayerNorm, residual connections
+- Key: Multi-head causal self-attention + token embeddings + positional info
 Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/11.png
 
-Slide 11: Future Trends
-- More efficiency, transparency (e.g., OLMo 2)
-- Advanced: MoE dominance, long-context handling
-- Open-weight research directions
-Visual/Images: https://media.licdn.com/dms/image/sync/v2/D4D27AQHQauAMzq5wgA/articleshare-shrink_800/B4DZkzq1i_JQAI-/0/1757508491818?e=2147483647&v=beta&t=4EDC39BxEgVNAouFm1YDy5mhjlvBIyDKNstilWUO9Co
+Slide 5: Main Open Models
+- LLaMA (Meta): Dense (e.g., Llama 3.1 405B), RoPE, GQA; benchmark leader
+- Mistral: Dense (e.g., Nemo), sliding window attention
+- Mixtral (Mistral AI): MoE (e.g., 8x22B), subset expert activation
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/18.png
 
-Slide 12: Thank You
+Slide 6: Dense vs. MoE
+- Dense: All params active (e.g., LLaMA 3.1, Gemma 2); high compute, consistent perf
+- MoE: Sparse—routes to expert subset (e.g., Mixtral 8x22B: 141B total, 30B active); efficient inference
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/9.png
+
+Slide 7: Positional Embeddings
+- RoPE (LLaMA/Mistral): Relative positioning for long contexts
+- Alternatives: Alibi, absolute sinusoidal
+- Encodes token order without fixed limits
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/11.png
+
+Slide 8: Attention Improvements
+- GQA: Reduces KV cache (LLaMA 3.1)
+- Sliding Window: Local efficiency (Gemma 3, Mistral)
+- MLA: Memory savings (DeepSeek V3); others: Linear/Sparse (Qwen)
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/18.png
+
+Slide 9: Context Length, Performance & Future Trends
+- Context: 128K+ (LLaMA 3.1, Mistral Large 2); improves reasoning, mitigated by windows
+- Perf: Open models (e.g., DeepSeek-V3) lead efficiency/benchmarks
+- Trends: More MoE/MLA, longer contexts, multimodal, reasoning gains
+Visual/Images: https://sebastianraschka.com/images/blog/2025/the-big-llm-architecture-comparison/hero.jpg
+
+Slide 10: Thank You
 - Questions?
-Visual/Images: 
+- Contact info or references
+Visual/Images: https://devopedia.org/images/article/483/6445.1717130942.jpg

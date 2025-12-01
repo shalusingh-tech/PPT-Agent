@@ -50,6 +50,3 @@ def get_ppt_agent():
             tools=[create_slide]
         )
     return _ppt_agent
-
-# For backward compatibility
-ppt_agent = None  # Will be initialized on first use via get_ppt_agent()

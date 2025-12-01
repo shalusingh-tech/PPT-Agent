@@ -58,8 +58,3 @@ async def visual_search(query: str) -> str:
     except Exception as e:
         logging.info(f"Error while doing the visual search inside visual_search tool and error is {str(e)}")
         return f"Error while doing the visual search and error is {str(e)}"
-
-
-    
-
-

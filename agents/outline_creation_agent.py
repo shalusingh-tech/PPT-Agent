@@ -20,8 +20,3 @@ def get_outline_agent():
             name="outline_creation"
         )
     return _outline_agent
-
-# For backward compatibility
-outline_agent = None  # Will be initialized on first use via get_outline_agent()
-
- 

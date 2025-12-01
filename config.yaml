@@ -1,34 +1,34 @@
 default:
   model: openrouter/x-ai/grok-4.1-fast:free
-  api_key: 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
+  api_key: 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
   temperature: 0.7
 agents:
   researcher:
     model: openrouter/x-ai/grok-4.1-fast:free
-    api_key: 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
+    api_key: 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
     temperature: 0
   file_understanding:
     model: openrouter/x-ai/grok-4.1-fast:free
-    api_key: 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
+    api_key: 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
     temperature: 0
   outline_creation:
     model: openrouter/x-ai/grok-4.1-fast:free
-    api_key: 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
+    api_key: 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
     temperature: 0
   presentation:
     model: openrouter/x-ai/grok-4.1-fast:free
-    api_key: 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
+    api_key: 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
     temperature: 0
 tools:
   summarizer:
     model: openrouter/x-ai/grok-4.1-fast:free
-    api_key: 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
+    api_key: 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
     temperature: 0
   ppt_creator:
     model: openrouter/x-ai/grok-4.1-fast:free
-    api_key: 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
+    api_key: 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
     temperature: 0
   img_describer:
     model: openrouter/x-ai/grok-4.1-fast:free
-    api_key: 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
+    api_key: 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
     temperature: 0.5

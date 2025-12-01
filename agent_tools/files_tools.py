@@ -10,12 +10,9 @@ import sys
 sys.path.append("..")
 from config_loader import get_llm
 
-# Ensure directories exist
 os.makedirs("user_files", exist_ok=True)
 os.makedirs("user_images", exist_ok=True)
 
-
-# Lazy initialization (singleton pattern)
 _summarizer = None
 _img_describer = None
 
@@ -138,22 +135,3 @@ async def summarize_images(file_name: str) -> str:
     except Exception as e:
         logging.info(f"Error while summarizing image {file_name} and error is {str(e)}")
         return f"Error while summarizing image {file_name} and error is {str(e)}"
-
-
-
-    
-
-    
-
-
-
-
-    
-# if __name__ == '__main__':
-#     result = asyncio.run(summarize_document('somatosensory.pdf'))
-#     print(result)
-
-
-
-
-
